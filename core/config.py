@@ -9,6 +9,12 @@ FONTS_DIR = os.path.join(BASE_DIR, 'fonts')
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 
 
+ACCESS_IDS = {
+    "YOUR_IDS",
+    "...",
+}
+
+
 USER_COMMANDS = {
     'START_COMMANDS': (
         'create_sticker',

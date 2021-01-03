@@ -7,9 +7,10 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
-from core.config import ALL_USER_COMMANDS, TOKEN
+from core.config import ACCESS_IDS, ALL_USER_COMMANDS, TOKEN
 from core.logs.log_helper import get_logger
 from core.types import Answer, CloseSession
+from core.utils.middleware import AccessMiddleware
 from core.utils.sessions_dispatcher import SessionsDispatcher
 from core.utils.user_session_handler import handler
 
@@ -60,7 +61,7 @@ async def answer_handler(chat_id: int,
 
 async def answer_handler_helper(chat_id: int, answer: Answer) -> None:
     """
-    Отправляет ответ в зависимости от типа Answer
+    Отправляет ответ в зависимости от типа контента в Answer
     """
     if answer.content_path:
         if answer.content_location == 'local':
@@ -84,16 +85,11 @@ async def answer_handler_helper(chat_id: int, answer: Answer) -> None:
                                 reply_markup=answer.keyboard)
 
 
-async def shutdown(dispatcher: Dispatcher) -> None:
-    await dispatcher.storage.close()
-    await dispatcher.storage.wait_closed()
-
-
 def main() -> NoReturn:
     dispatcher.middleware.setup(LoggingMiddleware(logger))
+    dispatcher.middleware.setup(AccessMiddleware(ACCESS_IDS))
 
-    executor.start_polling(dispatcher, skip_updates=True, on_shutdown=shutdown,
-                           timeout=60)
+    executor.start_polling(dispatcher, skip_updates=True, timeout=60)
 
 
 if __name__ == '__main__':
