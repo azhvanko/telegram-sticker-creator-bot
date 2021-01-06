@@ -1,3 +1,4 @@
+import asyncio
 import io
 from typing import NoReturn, Sequence, Union
 
@@ -16,9 +17,13 @@ from core.utils.user_session_handler import handler
 
 
 logger = get_logger()
-bot = Bot(token=TOKEN)
-dispatcher = Dispatcher(bot, storage=MemoryStorage())
+
 sessions_dispatcher = SessionsDispatcher(user_session_handler=handler)
+loop = asyncio.get_event_loop()
+loop.create_task(sessions_dispatcher.close_old_sessions())
+
+bot = Bot(token=TOKEN)
+dispatcher = Dispatcher(bot, storage=MemoryStorage(), loop=loop)
 
 
 @dispatcher.message_handler(commands=ALL_USER_COMMANDS)
