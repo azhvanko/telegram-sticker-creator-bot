@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import os
 from typing import Dict, Sequence, Union
@@ -47,9 +48,6 @@ class SessionsDispatcher:
             return self._get_init_message()
 
         if command in USER_COMMANDS['START_COMMANDS']:
-            if self._sessions:
-                self._close_old_sessions()
-
             try:
                 user_session = self._create_session(chat_id)
             except NotClosedUserSession as exc:
@@ -92,21 +90,19 @@ class SessionsDispatcher:
                 pass
             self._sessions.pop(chat_id, None)
 
-    def _close_old_sessions(self) -> None:
-        """
-        TODO: refactor method
-        Закрывает старые сессии
-        """
+    async def close_old_sessions(self) -> None:
         creation_limit = 600  # 10 min
-        current_time = self._get_now_datetime()
+        while True:
+            await asyncio.sleep(creation_limit / 2)
+            current_time = self._get_now_datetime()
 
-        close_list = set()
-        for chat_id, session in self._sessions.items():
-            if (current_time - session.created).total_seconds() > creation_limit:
-                close_list.add(chat_id)
+            close_list = set()
+            for chat_id, session in self._sessions.items():
+                if (current_time - session.created).total_seconds() > creation_limit:
+                    close_list.add(chat_id)
 
-        for chat_id in close_list:
-            self.close_session(chat_id)
+            for chat_id in close_list:
+                self.close_session(chat_id)
 
     def _create_session(self, chat_id: int) -> UserSession:
         """
